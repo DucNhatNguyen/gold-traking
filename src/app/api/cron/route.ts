@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { scrapeSJC } from '@/lib/scrapers/scrape-sjc'
-import { scrapeDOJI } from '@/lib/scrapers/scrape-doji'
-import { scrapePNJ } from '@/lib/scrapers/scrape-pnj'
+import { scrapeGiavang } from '@/lib/scrapers/scrape-giavang'
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -10,32 +8,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const scrapers = [scrapeSJC, scrapeDOJI, scrapePNJ]
-  const results = await Promise.allSettled(scrapers.map((fn) => fn()))
+  const results = await scrapeGiavang()
 
   const saved: string[] = []
   const errors: string[] = []
 
   for (const result of results) {
-    if (result.status === 'rejected') {
-      errors.push(String(result.reason))
-      continue
-    }
-
-    const scrapeResult = result.value
-    if (!scrapeResult.success || !scrapeResult.data) {
-      errors.push(scrapeResult.error ?? 'Unknown scrape error')
+    if (!result.success || !result.data) {
+      errors.push(result.error ?? 'Unknown error')
       continue
     }
 
     await prisma.priceRecord.create({
       data: {
-        brand: scrapeResult.data.brand,
-        buyPrice: scrapeResult.data.buyPrice,
-        sellPrice: scrapeResult.data.sellPrice,
+        brand: result.data.brand,
+        buyPrice: result.data.buyPrice,
+        sellPrice: result.data.sellPrice,
       },
     })
-    saved.push(scrapeResult.data.brand)
+    saved.push(result.data.brand)
   }
 
   return NextResponse.json({ saved, errors })
