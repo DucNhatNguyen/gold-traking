@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model PriceRecord {
+  id        Int      @id @default(autoincrement())
+  brand     String
+  buyPrice  Float
+  sellPrice Float
+  unit      String   @default("luong")
+  createdAt DateTime @default(now())
+
+  @@index([brand, createdAt])
+}
