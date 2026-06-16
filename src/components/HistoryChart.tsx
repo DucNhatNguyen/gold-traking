@@ -83,8 +83,8 @@ export function HistoryChart({ data, selectedBrand }: HistoryChartProps) {
           <XAxis dataKey="time" tick={{ fontSize: 11 }} />
           <YAxis tickFormatter={formatVNDShort} tick={{ fontSize: 11 }} width={55} />
           <Tooltip
-            formatter={(value: number) => [
-              `${(value / 1_000_000).toFixed(2)} triệu ₫`,
+            formatter={(value: unknown) => [
+              `${(Number(value) / 1_000_000).toFixed(2)} triệu ₫`,
               activeKey,
             ]}
           />
