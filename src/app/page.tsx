@@ -1,101 +1,126 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useEffect, useState } from 'react'
+import { PriceTable } from '@/components/PriceTable'
+import { HistoryChart } from '@/components/HistoryChart'
+import { CompareChart } from '@/components/CompareChart'
+
+interface PriceEntry {
+  brand: string
+  buyPrice: number
+  sellPrice: number
+  updatedAt: string
+}
+
+interface HistoryRecord {
+  brand: string
+  buyPrice: number
+  sellPrice: number
+  createdAt: string
+}
+
+interface PricesData {
+  latest: PriceEntry[]
+  history: HistoryRecord[]
+}
+
+export default function Page() {
+  const [data, setData] = useState<PricesData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [range, setRange] = useState<'7d' | '30d'>('7d')
+  const [selectedBrand, setSelectedBrand] = useState('SJC')
+
+  async function fetchData(r: '7d' | '30d') {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/prices?range=${r}`)
+      const json = await res.json()
+      setData(json)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData(range)
+  }, [range])
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <main className="mx-auto max-w-5xl px-4 py-8">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Giá vàng hôm nay</h1>
+          <p className="mt-1 text-sm text-gray-500">Cập nhật mỗi giờ — SJC, DOJI, PNJ</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={() => fetchData(range)}
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+          Làm mới
+        </button>
+      </div>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-base font-semibold text-gray-700">Giá hiện tại</h2>
+        {loading ? (
+          <div className="h-32 animate-pulse rounded-xl bg-gray-200" />
+        ) : (
+          <PriceTable data={data?.latest ?? []} />
+        )}
+      </section>
+
+      <div className="mb-6 flex gap-2">
+        {(['7d', '30d'] as const).map((r) => (
+          <button
+            key={r}
+            onClick={() => setRange(r)}
+            className={`rounded-lg px-4 py-1.5 text-sm font-medium ${
+              range === r
+                ? 'bg-yellow-500 text-white'
+                : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            {r === '7d' ? '7 ngày' : '30 ngày'}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-gray-700">Lịch sử giá</h2>
+            <div className="flex gap-1">
+              {['SJC', 'DOJI', 'PNJ'].map((brand) => (
+                <button
+                  key={brand}
+                  onClick={() => setSelectedBrand(brand)}
+                  className={`rounded px-2 py-0.5 text-xs font-medium ${
+                    selectedBrand === brand
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {brand}
+                </button>
+              ))}
+            </div>
+          </div>
+          {loading ? (
+            <div className="h-48 animate-pulse rounded-lg bg-gray-100" />
+          ) : (
+            <HistoryChart data={data?.history ?? []} selectedBrand={selectedBrand} />
+          )}
+        </section>
+
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-4 text-base font-semibold text-gray-700">So sánh giá bán</h2>
+          {loading ? (
+            <div className="h-48 animate-pulse rounded-lg bg-gray-100" />
+          ) : (
+            <CompareChart data={data?.history ?? []} />
+          )}
+        </section>
+      </div>
+    </main>
+  )
 }
